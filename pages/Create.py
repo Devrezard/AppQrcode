@@ -23,15 +23,22 @@ if img_file_buffer is not None:
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
     qrDecoder = cv2.QRCodeDetector()
+    barcodeDetector = cv2.barcode.BarcodeDetector()
+    
     
     # Detect and decode the qrcode
     data,bbox,rectifiedImage = qrDecoder.detectAndDecode(cv2_img)
-    if len(data)>0:
+    databar,bboxbar,rectifiedImagebar = barcodeDetector.detectAndDecode(cv2_img)
+    if len(data)>0 and len(databar)==0:
         rectifiedImage = np.uint8(rectifiedImage)
         st.success(f"QR code detected {data}",icon="✅")
         sheet_write.at[int(data), point] = date.strftime("%d/%m/%y %H:%M")
         conn.update(worksheet="Scan", data=sheet_write)
+    elif len(databar)>0 and len(data)==0:
+        st.success(f"Barcode detected {databar}",icon="✅")
+        #sheet_write.at[int(data), point] = date.strftime("%d/%m/%y %H:%M")
+        #conn.update(worksheet="Scan", data=sheet_write)
     else:
-        st.warning('QR Code not detected', icon="⚠️")
+        st.warning('QR Code or Barcode not detected', icon="⚠️")
 
 st.dataframe(sheet_write,hide_index=True)
